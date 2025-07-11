@@ -1,65 +1,72 @@
 import streamlit as st
 import pandas as pd
-import streamlit.components.v1 as components
+import folium
+from streamlit_folium import st_folium
 from geopy.distance import geodesic
+import streamlit.components.v1 as components
 
-# Check if GPS is available in query params
-query_params = st.query_params
-lat = query_params.get("lat")
-lon = query_params.get("lon")
+st.set_page_config(page_title="Fuel Yard Locator", layout="wide")
 
-# Inject JavaScript if location is not yet present
-if not lat or not lon:
-    components.html("""
-        <script>
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                const url = new URL(window.location);
-                url.searchParams.set('lat', lat);
-                url.searchParams.set('lon', lon);
-                window.location.replace(url);
-            }
-        );
-        </script>
-    """, height=0)
-    st.warning("📍 Requesting your location... please allow access in your browser.")
-    st.stop()
+# Inject JavaScript to get GPS coordinates via iframe-safe components.html
+components.html("""
+<script>
+console.log("\ud83d\udccd JavaScript loaded from iframe");
 
-# Proceed only when lat/lon are available
+if (!window.location.search.includes("lat")) {
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            console.log("\u2705 Got location:", lat, lon);
+            const newUrl = window.location.origin + window.location.pathname + `?lat=${lat}&lon=${lon}`;
+            window.location.replace(newUrl);
+        },
+        function(error) {
+            console.error("\u274c Geolocation error:", error);
+        }
+    );
+} else {
+    console.log("\u2705 URL already has coordinates:", window.location.search);
+}
+</script>
+""", height=0)
+
+# Load data
 df = pd.read_csv("geocoded_yards.csv")
 df = df.dropna(subset=["Latitude", "Longitude"])
 
-st.title("🚛 Nearest Fuel Yard Finder")
+# Get query parameters
+params = st.query_params
+lat = params.get("lat")
+lon = params.get("lon")
 
-with st.form("location_form"):
-    user_lat = st.text_input("Your Latitude", value=lat)
-    user_lon = st.text_input("Your Longitude", value=lon)
-    submitted = st.form_submit_button("Find Nearest Yard")
-
-if submitted and user_lat and user_lon:
+if lat and lon:
     try:
-        user_coords = (float(user_lat), float(user_lon))
+        user_location = (float(lat), float(lon))
+        st.success(f"\ud83d\udccd Location detected: {user_location}")
 
+        # Calculate distances
         df["Distance (miles)"] = df.apply(
-            lambda row: geodesic(user_coords, (row["Latitude"], row["Longitude"])).miles,
+            lambda row: geodesic(user_location, (row["Latitude"], row["Longitude"])).miles,
             axis=1
         )
 
+        # Nearest yard
         nearest = df.sort_values("Distance (miles)").iloc[0]
 
-        st.success(f"📍 Nearest yard: {nearest['MAINTENANCE YARD']} ({nearest['Distance (miles)']:.2f} miles)")
-        st.write(f"**County:** {nearest['COUNTY']}")
-        st.write(f"**Address:** {nearest['MAILING ADDRESS']}, {nearest['ZIP CODE']}")
-        st.write(f"**Phone:** {nearest['YARD PHONE #']}")
-        st.write(f"**Supervisor:** {nearest['CREW SUPERVISOR']}")
+        st.subheader(f"Nearest Yard: {nearest['MAINTENANCE YARD']}")
+        st.write(f"Distance: {nearest['Distance (miles)']:.2f} miles")
+        st.write(f"County: {nearest['COUNTY']}")
+        st.write(f"Address: {nearest['MAILING ADDRESS']}, NJ {nearest['ZIP CODE']}")
+        st.write(f"Phone: {nearest['YARD PHONE #']}")
 
-        st.map(pd.DataFrame({
-            'lat': [user_coords[0], nearest['Latitude']],
-            'lon': [user_coords[1], nearest['Longitude']]
-        }))
+        # Map
+        m = folium.Map(location=user_location, zoom_start=9)
+        folium.Marker(user_location, tooltip="You", icon=folium.Icon(color="blue")).add_to(m)
+        folium.Marker((nearest["Latitude"], nearest["Longitude"]), tooltip=nearest["MAINTENANCE YARD"], icon=folium.Icon(color="red")).add_to(m)
+        st_folium(m, width=700, height=500)
 
-    except ValueError:
-        st.error("❗ Invalid coordinates. Please enter valid numbers.")
-
+    except:
+        st.error("Could not parse your coordinates.")
+else:
+    st.warning("\ud83d\udccd Requesting your location... please allow access in your browser.")
