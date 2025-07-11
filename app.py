@@ -10,24 +10,25 @@ st.set_page_config(page_title="Fuel Yard Locator", layout="wide")
 # Inject JavaScript to get GPS coordinates via iframe-safe components.html
 components.html("""
 <script>
-console.log("JavaScript loaded from iframe");
+(function() {
+  console.log("JavaScript loaded from iframe");
 
-if (!window.location.search.includes("lat")) {
+  if (!window.location.search.includes("lat")) {
     navigator.geolocation.getCurrentPosition(
-        function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            console.log("Got location:", lat, lon);
-            const newUrl = window.location.origin + window.location.pathname + `?lat=${lat}&lon=${lon}`;
-            window.location.replace(newUrl);
-        },
-        function(error) {
-            console.error("Geolocation error:", error);
-        }
+      function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const newUrl = window.location.origin + window.location.pathname + `?lat=${lat}&lon=${lon}`;
+        window.top.location.href = newUrl;
+      },
+      function(error) {
+        console.error("Geolocation error:", error);
+      }
     );
-} else {
-    console.log("URL already has coordinates:", window.location.search);
-}
+  } else {
+    console.log("URL already has coordinates.");
+  }
+})();
 </script>
 """, height=0)
 
