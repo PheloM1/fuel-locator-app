@@ -42,6 +42,19 @@ components.html("""
 
 components.html("""
     <script>
+components.html("""
+    <script>
+    if (!window.location.search.includes("lat")) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                window.location.search = `?lat=${lat}&lon=${lon}`;
+            }
+        );
+    }
+    </script>
+""", height=0)
     if (!window.location.search.includes("lat")) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
