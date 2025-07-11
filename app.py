@@ -39,6 +39,31 @@ components.html("""
             const lon = position.coords.longitude;
             const input = document.createElement("input");
             input.type = "hidden";
+
+components.html("""
+    <script>
+    if (!window.location.search.includes("lat")) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          window.location.search = `?lat=${lat}&lon=${lon}`;
+        }
+      );
+    }
+    </script>
+""", height=0)
+
+df = load_data()
+# Extract lat/lon from URL if available
+query_params = st.experimental_get_query_params()
+try:
+    auto_lat = float(query_params.get("lat", [0.0])[0])
+    auto_lon = float(query_params.get("lon", [0.0])[0])
+except:
+    auto_lat = 0.0
+    auto_lon = 0.0
+
             input.name = "coords";
             input.value = lat + "," + lon;
             document.forms[0].appendChild(input);
@@ -47,6 +72,9 @@ components.html("""
     );
     </script>
 """, height=0)
+with st.form("location_form"):
+    user_lat = st.number_input("Latitude", format="%.6f", value=auto_lat)
+    user_lon = st.number_input("Longitude", format="%.6f", value=auto_lon)
 
 # Manual location fallback
 st.markdown("### 📍 Your Location")
