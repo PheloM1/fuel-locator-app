@@ -3,18 +3,20 @@ import pandas as pd
 import streamlit.components.v1 as components
 from geopy.distance import geodesic
 
-# Auto-detect GPS from browser and reload with query params
+# Inject JavaScript to fetch GPS and update query params
 components.html("""
     <script>
-    if (!window.location.search.includes("lat")) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                window.location.search = `?lat=${lat}&lon=${lon}`;
-            }
-        );
-    }
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const url = new URL(window.location);
+            url.searchParams.set('lat', lat);
+            url.searchParams.set('lon', lon);
+            window.history.replaceState({}, '', url);
+            window.location.reload();
+        }
+    );
     </script>
 """, height=0)
 
