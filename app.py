@@ -25,11 +25,11 @@ df = df.dropna(subset=["Latitude", "Longitude"])
 st.title("🚛 Nearest Fuel Yard Finder")
 
 # Read GPS from query params
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 
 # Fill in lat/lon from URL if available
-lat = query_params.get("lat", [""])[0]
-lon = query_params.get("lon", [""])[0]
+lat = query_params.get("lat", "")
+lon = query_params.get("lon", "")
 
 with st.form("location_form"):
     user_lat = st.text_input("Your Latitude", value=lat)
