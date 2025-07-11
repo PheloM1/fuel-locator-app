@@ -69,4 +69,4 @@ if lat and lon:
     except:
         st.error("Could not parse your coordinates.")
 else:
-    st.warning("\ud83d\udccd Requesting your location... please allow access in your browser.")
+    st.warning("Requesting your location... please allow access in your browser.")
