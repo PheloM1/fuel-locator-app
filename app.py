@@ -18,29 +18,32 @@ data = load_data()
 
 # Read location from query params
 query = st.query_params
-lat = query.get("lat", [None])[0]
-lon = query.get("lon", [None])[0]
+lat = query.get("lat")
+lon = query.get("lon")
 
 if lat and lon:
-    user_location = (float(lat), float(lon))
+    try:
+        user_location = (float(lat), float(lon))
 
-    # Calculate distances
-    data["Distance (mi)"] = data.apply(
-        lambda row: geodesic(user_location, (row["Latitude"], row["Longitude"])).miles,
-        axis=1
-    )
+        # Calculate distances
+        data["Distance (mi)"] = data.apply(
+            lambda row: geodesic(user_location, (row["Latitude"], row["Longitude"])).miles,
+            axis=1
+        )
 
-    nearest = data.sort_values("Distance (mi)").iloc[0]
+        nearest = data.sort_values("Distance (mi)").iloc[0]
 
-    st.success(f"Nearest Yard: {nearest['MAINTENANCE YARD']} ({nearest['Distance (mi)']:.1f} mi)")
+        st.success(f"Nearest Yard: {nearest['MAINTENANCE YARD']} ({nearest['Distance (mi)']:.1f} mi)")
 
-    # Show map
-    m = folium.Map(location=user_location, zoom_start=10)
-    folium.Marker(user_location, tooltip="You Are Here", icon=folium.Icon(color='blue')).add_to(m)
-    folium.Marker([
-        nearest["Latitude"], nearest["Longitude"]
-    ], tooltip=nearest["MAINTENANCE YARD"], icon=folium.Icon(color='red')).add_to(m)
-    st_folium(m, width=700, height=500)
+        # Show map
+        m = folium.Map(location=user_location, zoom_start=10)
+        folium.Marker(user_location, tooltip="You Are Here", icon=folium.Icon(color='blue')).add_to(m)
+        folium.Marker([
+            nearest["Latitude"], nearest["Longitude"]
+        ], tooltip=nearest["MAINTENANCE YARD"], icon=folium.Icon(color='red')).add_to(m)
+        st_folium(m, width=700, height=500)
+    except Exception as e:
+        st.error("Invalid location provided in URL.")
 else:
     st.warning("Requesting your location... please allow access in your browser.")
 
