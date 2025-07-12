@@ -3,7 +3,6 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 from geopy.distance import geodesic
-from urllib.parse import urlencode
 
 st.set_page_config(page_title="Fuel Locator", layout="wide")
 st.title("🚛 NJ Fuel Yard Locator")
@@ -23,7 +22,7 @@ lon = query.get("lon")
 
 if lat and lon:
     try:
-        user_location = (float(lat[0]), float(lon[0]))  # ✅ FIXED: access first element
+        user_location = (float(lat[0]), float(lon[0]))
 
         # Calculate distances
         data["Distance (mi)"] = data.apply(
@@ -47,7 +46,6 @@ if lat and lon:
 else:
     st.warning("Requesting your location... please allow access in your browser.")
 
-    # Button to trigger location script
     if st.button("📍 Use My Location"):
         st.components.v1.html("""
         <script>
@@ -55,8 +53,10 @@ else:
             function(pos) {
               const lat = pos.coords.latitude;
               const lon = pos.coords.longitude;
-              const query = new URLSearchParams({lat: lat, lon: lon});
-              window.location.search = query.toString();
+              const url = new URL(window.location.href);
+              url.searchParams.set("lat", lat);
+              url.searchParams.set("lon", lon);
+              window.open(url.toString(), "_blank");  // ✅ Open GPS-enabled page in new tab
             },
             function(err) {
               alert("Error fetching location: " + err.message);
