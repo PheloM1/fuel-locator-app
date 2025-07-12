@@ -23,33 +23,10 @@ def get_coordinates(location_name):
 
 st.set_page_config(page_title="Fuel Yard Locator", layout="wide")
 st.title("🚛 NJ Fuel Yard Locator")
-st.header("📍 Enter a location or use your GPS")
 
-# --- Search bar
+st.header("📍 Enter a location or use your GPS")
 location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 
-# --- "Use My Location" Button
-use_gps = st.button("📡 Use My Location")
-
-# --- Inject JS if button is clicked
-if use_gps:
-    st.components.v1.html("""
-        <script>
-        navigator.geolocation.getCurrentPosition(
-            function(pos) {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                const newUrl = window.location.href.split('?')[0] + `?lat=${lat}&lon=${lon}`;
-                window.location.replace(newUrl);
-            },
-            function(err) {
-                alert("Geolocation error: " + err.message);
-            }
-        );
-        </script>
-    """, height=0)
-
-# --- Parse coordinates from URL or location input
 lat, lon = None, None
 query_params = st.query_params
 if "lat" in query_params and "lon" in query_params:
@@ -58,7 +35,6 @@ if "lat" in query_params and "lon" in query_params:
 elif location_input:
     lat, lon = get_coordinates(location_input)
 
-# --- Show nearest yard
 if lat is not None and lon is not None:
     nearest_yard, distance = find_nearest(lat, lon)
 
@@ -75,11 +51,32 @@ if lat is not None and lon is not None:
     maps_url = f"https://www.google.com/maps/dir/?api=1&destination={address.replace(' ', '+')}+{county}+NJ+{zip_code}"
     st.markdown(f"[🗺️ Open in Google Maps]({maps_url})", unsafe_allow_html=True)
 
-    # Map with markers
     m = folium.Map(location=[lat, lon], zoom_start=10)
     folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color='blue')).add_to(m)
     folium.Marker([nearest_yard['Latitude'], nearest_yard['Longitude']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
     st_folium(m, width=700, height=500)
 
 else:
-    st.warning("Enter a location or click '📡 Use My Location'.")
+    st.warning("Enter a location above or use your device’s GPS.")
+
+    st.markdown("""
+        <button onclick="getLocation()" style="margin-top:10px;padding:10px 20px;font-size:16px;">
+            📍 Use My Location
+        </button>
+        <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const newUrl = window.location.href.split('?')[0] + `?lat=${lat}&lon=${lon}`;
+                    window.location.replace(newUrl);
+                }, function(error) {
+                    alert("Unable to retrieve your location. Please enable location access.");
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+        </script>
+    """, unsafe_allow_html=True)
