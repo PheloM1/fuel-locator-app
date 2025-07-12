@@ -5,6 +5,22 @@ from streamlit_folium import st_folium
 from geopy.distance import geodesic
 import streamlit.components.v1 as components
 
+# Custom CSS for mobile optimization
+st.markdown("""
+    <style>
+        html, body, [class*="css"]  {
+            font-size: 18px;
+        }
+        a, button, .stButton>button {
+            font-size: 18px !important;
+            padding: 0.75em 1.5em;
+        }
+        .element-container:has(.folium-map) {
+            overflow-x: hidden !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Load yard data
 df = pd.read_csv("geocoded_yards.csv")
 df = df.dropna(subset=["Latitude", "Longitude"])
@@ -54,14 +70,15 @@ try:
     maps_url = f"https://www.google.com/maps/dir/?api=1&origin=My+Location&destination={dest_lat},{dest_lon}&travelmode=driving"
     st.markdown(f"[🗺️ Open in Google Maps for Directions]({maps_url})", unsafe_allow_html=True)
 
-    st_folium(m, height=500, use_container_width=True)
+    st_folium(m, height=400, use_container_width=True)
 
 except Exception:
     st.warning("Requesting your location... please allow access in your browser.")
 
-    # Inject JS that gets location and shows a clickable link to the correct URL
+    # Inject JS to scroll up and build a clickable link
     components.html(f"""
     <script>
+    window.scrollTo(0, 0); // Scroll to top on load
     navigator.geolocation.getCurrentPosition(
       function(pos) {{
         const lat = pos.coords.latitude;
