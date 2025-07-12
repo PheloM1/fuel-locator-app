@@ -100,7 +100,8 @@ else:
         }
         </script>
 
-        <button onclick="getLocationAndRedirect()" style="
+        <a href="javascript:getLocationAndRedirect()" style="
+            display: inline-block;
             margin-top: 1em;
             padding: 0.75em 1.5em;
             font-size: 16px;
@@ -108,5 +109,6 @@ else:
             color: white;
             border: none;
             border-radius: 6px;
-        ">📍 Use My Location</button>
+            text-decoration: none;
+        ">📍 Use My Location</a>
     """, unsafe_allow_html=True)
