@@ -69,7 +69,7 @@ else:
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
                 const newUrl = window.location.origin + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
-                window.open(newUrl, '_blank');
+                window.location.replace(newUrl);  // ✅ replaces current tab (works reliably on mobile)
             }, function(err) {
                 alert("Failed to get location. Please allow location access.");
             });
@@ -88,3 +88,4 @@ else:
             text-decoration: none;
         ">📍 Use My Location</a>
     """, height=100)
+
