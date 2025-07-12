@@ -16,10 +16,14 @@ def find_nearest(lat, lon):
 
 def get_coordinates(location_name):
     geolocator = Nominatim(user_agent="fuel_locator")
-    location = geolocator.geocode(location_name)
-    if location:
-        return location.latitude, location.longitude
+    try:
+        location = geolocator.geocode(location_name, timeout=10)
+        if location:
+            return location.latitude, location.longitude
+    except Exception as e:
+        st.error("❌ Geolocation lookup failed. Please try again later.")
     return None, None
+
 
 # Page setup
 st.set_page_config(page_title="Fuel Yard Locator", layout="wide")
@@ -80,3 +84,32 @@ if lat is not None and lon is not None:
             ).add_to(m)
 
     st_folium(m, width=700, height=500)
+    else:
+    st.warning("Enter a location above or click the button to use your device’s GPS.")
+
+    st.components.v1.html("""
+        <script>
+        function openGPSWindow() {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                const newUrl = window.location.origin + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
+                window.open(newUrl, '_blank');
+            }, function(err) {
+                alert("❌ Location access denied or unavailable.");
+            });
+        }
+        </script>
+        <div style="margin-top: 1em;">
+            <button onclick="openGPSWindow()" style="
+                padding: 0.75em 1.5em;
+                font-size: 16px;
+                background-color: #4A4A4A;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+            ">📍 Use My Location</button>
+        </div>
+    """, height=80)
+
