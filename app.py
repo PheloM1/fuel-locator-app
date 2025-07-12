@@ -7,10 +7,14 @@ from geopy.distance import geodesic
 
 # Load geocoded data
 df = pd.read_csv("geocoded_yards.csv")
-df = df.dropna(subset=["Latitude", "Longitude"])
+
+# Rename columns to standard format
+df.columns = [col.strip().upper() for col in df.columns]
+df = df.rename(columns={"LATITUDE": "LAT", "LONGITUDE": "LON"})
+df = df.dropna(subset=["LAT", "LON"])
 
 def find_nearest(lat, lon):
-    distances = df.apply(lambda row: geodesic((lat, lon), (row['Latitude'], row['Longitude'])).miles, axis=1)
+    distances = df.apply(lambda row: geodesic((lat, lon), (row['LAT'], row['LON'])).miles, axis=1)
     idx = distances.idxmin()
     return df.loc[idx], distances[idx]
 
@@ -23,8 +27,8 @@ def get_coordinates(location_name):
 
 st.set_page_config(page_title="Fuel Yard Locator", layout="wide")
 st.title("🚛 NJ Fuel Yard Locator")
-
 st.header("📍 Enter a location or use your GPS")
+
 location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 
 lat, lon = None, None
@@ -42,7 +46,7 @@ if lat is not None and lon is not None:
     address = nearest_yard['MAILING ADDRESS']
     zip_code = str(nearest_yard['ZIP CODE'])
     county = nearest_yard['COUNTY']
-    phone = nearest_yard.get('YARD PHONE #', "N/A")
+    phone = nearest_yard['YARD PHONE #'] if 'YARD PHONE #' in nearest_yard else "N/A"
 
     st.success(f"✅ Nearest Yard: {yard_name} ({distance:.2f} mi)")
     st.markdown(f"**Address:** {address}, {county}, NJ {zip_code}")
@@ -53,36 +57,35 @@ if lat is not None and lon is not None:
 
     m = folium.Map(location=[lat, lon], zoom_start=10)
     folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color='blue')).add_to(m)
-    folium.Marker([nearest_yard['Latitude'], nearest_yard['Longitude']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
+    folium.Marker([nearest_yard['LAT'], nearest_yard['LON']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
     st_folium(m, width=700, height=500)
-
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
-
     st.markdown("""
-        <div style="margin-top:20px;">
-            <button onclick="getLocation()" style="padding:12px 24px;font-size:16px;border-radius:6px;cursor:pointer;">
-                📍 Use My Location
-            </button>
-        </div>
-
-        <script>
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        const lat = pos.coords.latitude;
-                        const lon = pos.coords.longitude;
-                        const newUrl = window.location.origin + window.location.pathname + `?lat=${lat}&lon=${lon}`;
-                        window.open(newUrl, '_blank');
-                    },
-                    function(error) {
-                        alert("Failed to get location. Please allow access and try again.");
-                    }
-                );
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
-        }
-        </script>
+        <a href="#" onclick="
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const url = window.location.origin + window.location.pathname + `?lat=${lat}&lon=${lon}`;
+                    window.open(url, '_blank');
+                },
+                function(error) {
+                    alert('Could not retrieve location. Please allow GPS access.');
+                }
+            );
+            return false;
+        " style="
+            display: inline-block;
+            padding: 0.75em 1.5em;
+            margin-top: 1em;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background-color: #4A4A4A;
+            border-radius: 5px;
+            text-decoration: none;
+        ">
+        📍 Use My Location
+        </a>
     """, unsafe_allow_html=True)
