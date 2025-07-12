@@ -3,6 +3,7 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 from geopy.distance import geodesic
+from geopy.geocoders import Nominatim
 import streamlit.components.v1 as components
 
 # Custom CSS for mobile optimization
@@ -29,10 +30,27 @@ df = df.dropna(subset=["Latitude", "Longitude"])
 st.set_page_config(page_title="NJ Fuel Yard Locator", page_icon="🚛", layout="wide")
 st.title("🚛 NJ Fuel Yard Locator")
 
-# Read query params
-query_params = st.query_params
-user_lat = query_params.get("lat", None)
-user_lon = query_params.get("lon", None)
+# Location input section
+st.subheader("📍 Enter a location or use your GPS")
+address = st.text_input("Type your location (e.g., city or ZIP code):")
+
+if address:
+    try:
+        geolocator = Nominatim(user_agent="fuel-locator-app")
+        location = geolocator.geocode(address)
+        if location:
+            user_lat = location.latitude
+            user_lon = location.longitude
+        else:
+            st.error("Location not found. Try something else.")
+            st.stop()
+    except:
+        st.error("Geocoding failed. Try again later.")
+        st.stop()
+else:
+    query_params = st.query_params
+    user_lat = query_params.get("lat", None)
+    user_lon = query_params.get("lon", None)
 
 # Try converting lat/lon to float
 try:
@@ -78,7 +96,7 @@ except Exception:
     # Inject JS to scroll up and build a clickable link
     components.html(f"""
     <script>
-    window.scrollTo(0, 0); // Scroll to top on load
+    window.scrollTo(0, 0);
     navigator.geolocation.getCurrentPosition(
       function(pos) {{
         const lat = pos.coords.latitude;
