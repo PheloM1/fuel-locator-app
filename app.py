@@ -28,7 +28,6 @@ st.header("📍 Enter a location or use your GPS")
 location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 
 lat, lon = None, None
-
 query_params = st.query_params
 if "lat" in query_params and "lon" in query_params:
     lat = float(query_params["lat"])
@@ -60,28 +59,23 @@ if lat is not None and lon is not None:
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
 
+    # This opens a new tab using geolocation
     st.markdown("""
-        <script>
-        function getLocationAndRedirect() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    const redirectUrl = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
-                    const win = window.open(redirectUrl, '_blank');
-                    if (!win) {
-                        alert("Please allow pop-ups for this site to use GPS.");
-                    }
-                }, function(error) {
-                    alert("Location access denied. Please allow GPS access to use this feature.");
+        <a href="javascript:(function(){
+            if(navigator.geolocation){
+                navigator.geolocation.getCurrentPosition(function(pos){
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const url = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
+                    window.open(url, '_blank');
+                }, function(){
+                    alert('Location access denied.');
                 });
             } else {
-                alert("Geolocation is not supported by this browser.");
+                alert('Geolocation not supported.');
             }
-        }
-        </script>
-
-        <button onclick="getLocationAndRedirect()" style="
+        })();" style="
+            display: inline-block;
             margin-top: 1em;
             padding: 0.75em 1.5em;
             font-size: 16px;
@@ -89,7 +83,8 @@ else:
             color: white;
             border: none;
             border-radius: 6px;
-            cursor: pointer;">
+            text-decoration: none;
+        ">
             📍 Use My Location
-        </button>
+        </a>
     """, unsafe_allow_html=True)
