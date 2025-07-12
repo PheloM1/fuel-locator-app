@@ -40,18 +40,23 @@ try:
     # Map setup
     m = folium.Map(location=user_location, zoom_start=10)
     folium.Marker(user_location, tooltip="📍You are here", icon=folium.Icon(color="blue")).add_to(m)
-    folium.Marker([nearest["Latitude"], nearest["Longitude"]],
-                  tooltip=f"🚚 Nearest Yard: {nearest['MAINTENANCE YARD']}\n📞 {nearest['YARD PHONE #']}",
-                  icon=folium.Icon(color="green")).add_to(m)
+    folium.Marker([
+        nearest["Latitude"], nearest["Longitude"]
+    ], tooltip=f"🚚 {nearest['MAINTENANCE YARD']}", icon=folium.Icon(color="green")).add_to(m)
 
     st.subheader(f"✅ Nearest Yard: {nearest['MAINTENANCE YARD']} ({nearest['Distance (mi)']:.2f} mi)")
     st.write(f"📍 Address: {nearest['MAILING ADDRESS']}, {nearest['MUNICIPALITY']}, NJ {int(nearest['ZIP CODE'])}")
     st.write(f"📞 Phone: {nearest['YARD PHONE #']}")
 
+    # Google Maps directions link
+    dest_lat = nearest['Latitude']
+    dest_lon = nearest['Longitude']
+    maps_url = f"https://www.google.com/maps/dir/?api=1&origin=My+Location&destination={dest_lat},{dest_lon}&travelmode=driving"
+    st.markdown(f"[🗺️ Open in Google Maps for Directions]({maps_url})", unsafe_allow_html=True)
+
     st_folium(m, height=500, use_container_width=True)
 
 except Exception:
-    # If no coordinates yet, prompt for location
     st.warning("Requesting your location... please allow access in your browser.")
 
     # Inject JS that gets location and shows a clickable link to the correct URL
