@@ -57,24 +57,29 @@ if lat is not None and lon is not None:
     st_folium(m, width=700, height=500)
 
 else:
-    st.warning("Enter a location above or use your device’s GPS.")
+    st.warning("Enter a location above or click the button to use your device’s GPS.")
 
     st.markdown("""
-        <button onclick="getLocation()" style="margin-top:10px;padding:10px 20px;font-size:16px;">
-            📍 Use My Location
-        </button>
+        <div style="margin-top:20px;">
+            <button onclick="getLocation()" style="padding:12px 24px;font-size:16px;border-radius:6px;cursor:pointer;">
+                📍 Use My Location
+            </button>
+        </div>
+
         <script>
         function getLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(pos) {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    const base = window.location.href.split('?')[0];
-                    const newUrl = base + `?lat=${lat}&lon=${lon}`;
-                    window.open(newUrl, '_blank');
-                }, function(error) {
-                    alert("Unable to retrieve your location. Please enable location access.");
-                });
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        const newUrl = window.location.origin + window.location.pathname + `?lat=${lat}&lon=${lon}`;
+                        window.open(newUrl, '_blank');
+                    },
+                    function(error) {
+                        alert("Failed to get location. Please allow access and try again.");
+                    }
+                );
             } else {
                 alert("Geolocation is not supported by this browser.");
             }
