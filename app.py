@@ -59,32 +59,30 @@ if lat is not None and lon is not None:
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
 
-    # This opens a new tab using geolocation
     st.markdown("""
-        <a href="javascript:(function(){
-            if(navigator.geolocation){
-                navigator.geolocation.getCurrentPosition(function(pos){
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
+        <a href="#" onclick="
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
                     const url = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
-                    window.open(url, '_blank');
-                }, function(){
-                    alert('Location access denied.');
-                });
-            } else {
-                alert('Geolocation not supported.');
-            }
-        })();" style="
+                    location.href = url;
+                },
+                function(error) {
+                    alert('Location access denied. Please allow GPS access.');
+                }
+            );
+            return false;
+        " style='
             display: inline-block;
             margin-top: 1em;
             padding: 0.75em 1.5em;
             font-size: 16px;
-            background-color: #444;
+            background-color: #4A4A4A;
             color: white;
-            border: none;
             border-radius: 6px;
             text-decoration: none;
-        ">
-            📍 Use My Location
+        '>
+        📍 Use My Location
         </a>
     """, unsafe_allow_html=True)
