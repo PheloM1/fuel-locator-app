@@ -8,7 +8,7 @@ from geopy.distance import geodesic
 # Load geocoded data
 df = pd.read_csv("geocoded_yards.csv")
 
-df = df.dropna(subset=["LAT", "LON"])
+df = df.dropna(subset=["lat", "lon"])
 
 def find_nearest(lat, lon):
     distances = df.apply(lambda row: geodesic((lat, lon), (row['LAT'], row['LON'])).miles, axis=1)
