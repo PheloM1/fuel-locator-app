@@ -62,36 +62,21 @@ if lat is not None and lon is not None:
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
 
-    st.components.v1.html("""
-        <script>
-        function openGPSLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    const newUrl = window.location.origin + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
-                    window.location.replace(newUrl);
-                }, function(error) {
-                    alert("Failed to get location. Please allow location access.");
-                });
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
-        }
-        </script>
-
+    st.markdown(f"""
         <div style="margin-top: 1em;">
-            <button onclick="openGPSLocation()" style="
-                padding: 0.75em 1.5em;
-                font-size: 16px;
-                background-color: #4A4A4A;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-            ">📍 Use My Location</button>
+            <a href="https://phelom1.github.io/fuel-locator-app/get-location.html" target="_blank">
+                <button style="
+                    padding: 0.75em 1.5em;
+                    font-size: 16px;
+                    background-color: #4A4A4A;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                ">📍 Use My Location</button>
+            </a>
         </div>
-    """, height=120)
+    """, unsafe_allow_html=True)
 
 
 
