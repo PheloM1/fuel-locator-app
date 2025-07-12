@@ -63,29 +63,34 @@ else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
 
     st.components.v1.html("""
-        <script>
-        function openGPSWindow() {
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                const newUrl = window.location.origin + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
-                window.location.replace(newUrl);  // ✅ replaces current tab (works reliably on mobile)
-            }, function(err) {
-                alert("Failed to get location. Please allow location access.");
-            });
-        }
-        </script>
+        <div style="margin-top: 1em;">
+            <button id="gps-btn" style="
+                padding: 0.75em 1.5em;
+                font-size: 16px;
+                background-color: #4A4A4A;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+            ">📍 Use My Location</button>
+        </div>
 
-        <a href="javascript:openGPSWindow()" style="
-            display: inline-block;
-            margin-top: 1em;
-            padding: 0.75em 1.5em;
-            font-size: 16px;
-            background-color: #4A4A4A;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            text-decoration: none;
-        ">📍 Use My Location</a>
-    """, height=100)
+        <script>
+        document.getElementById("gps-btn").addEventListener("click", function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const newUrl = window.location.origin + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
+                    window.location.replace(newUrl);
+                }, function(error) {
+                    alert("Failed to get location. Please allow location access.");
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+        </script>
+    """, height=120)
+
 
