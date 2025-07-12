@@ -63,20 +63,8 @@ else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
 
     st.components.v1.html("""
-        <div style="margin-top: 1em;">
-            <button id="gps-btn" style="
-                padding: 0.75em 1.5em;
-                font-size: 16px;
-                background-color: #4A4A4A;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-            ">📍 Use My Location</button>
-        </div>
-
         <script>
-        document.getElementById("gps-btn").addEventListener("click", function () {
+        function openGPSLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     const lat = position.coords.latitude;
@@ -89,8 +77,21 @@ else:
             } else {
                 alert("Geolocation is not supported by this browser.");
             }
-        });
+        }
         </script>
+
+        <div style="margin-top: 1em;">
+            <button onclick="openGPSLocation()" style="
+                padding: 0.75em 1.5em;
+                font-size: 16px;
+                background-color: #4A4A4A;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+            ">📍 Use My Location</button>
+        </div>
     """, height=120)
+
 
 
