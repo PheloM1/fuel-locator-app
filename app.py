@@ -54,33 +54,29 @@ if lat is not None and lon is not None:
     st.markdown(f"[🗺️ Open in Google Maps]({maps_url})", unsafe_allow_html=True)
 
     # Map
-m = folium.Map(location=[lat, lon], zoom_start=10)
+    m = folium.Map(location=[lat, lon], zoom_start=10)
 
-# Your location
-folium.Marker(
-    [lat, lon],
-    popup="Your Location",
-    icon=folium.Icon(color='blue')
-).add_to(m)
+    # Your location
+    folium.Marker(
+        [lat, lon],
+        popup="Your Location",
+        icon=folium.Icon(color='blue')
+    ).add_to(m)
 
-# Nearest yard
-folium.Marker(
-    [nearest_yard['Latitude'], nearest_yard['Longitude']],
-    popup=yard_name,
-    icon=folium.Icon(color='green')
-).add_to(m)
+    # Nearest yard
+    folium.Marker(
+        [nearest_yard['Latitude'], nearest_yard['Longitude']],
+        popup=yard_name,
+        icon=folium.Icon(color='green')
+    ).add_to(m)
 
-# Optional toggle to show all yards
-if st.checkbox("📍 Show all yards on map"):
-    for _, row in df.iterrows():
-        folium.Marker(
-            [row['Latitude'], row['Longitude']],
-            popup=row['MAINTENANCE YARD'],
-            icon=folium.Icon(color='gray', icon='wrench', prefix='fa')
-        ).add_to(m)
+    # Optional toggle to show all yards
+    if st.checkbox("📍 Show all yards on map"):
+        for _, row in df.iterrows():
+            folium.Marker(
+                [row['Latitude'], row['Longitude']],
+                popup=row['MAINTENANCE YARD'],
+                icon=folium.Icon(color='gray', icon='wrench', prefix='fa')
+            ).add_to(m)
 
-st_folium(m, width=700, height=500)
-
-
-
-
+    st_folium(m, width=700, height=500)
