@@ -60,29 +60,30 @@ else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
 
     st.markdown("""
-        <a href="#" onclick="
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
+        <script>
+        function getLocationAndRedirect() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    const url = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
-                    location.href = url;
-                },
-                function(error) {
-                    alert('Location access denied. Please allow GPS access.');
-                }
-            );
-            return false;
-        " style='
-            display: inline-block;
+                    const newUrl = window.location.origin + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
+                    window.top.location.href = newUrl;
+                }, function(error) {
+                    alert("Location access denied or unavailable.");
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+        </script>
+
+        <button onclick="getLocationAndRedirect()" style="
             margin-top: 1em;
             padding: 0.75em 1.5em;
             font-size: 16px;
             background-color: #4A4A4A;
             color: white;
+            border: none;
             border-radius: 6px;
-            text-decoration: none;
-        '>
-        📍 Use My Location
-        </a>
+        ">📍 Use My Location</button>
     """, unsafe_allow_html=True)
