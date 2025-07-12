@@ -7,7 +7,6 @@ from geopy.distance import geodesic
 st.set_page_config(page_title="Fuel Locator", layout="wide")
 st.title("🚛 NJ Fuel Yard Locator")
 
-# Read geocoded data
 @st.cache_data
 def load_data():
     df = pd.read_csv("geocoded_yards.csv")
@@ -15,7 +14,6 @@ def load_data():
 
 data = load_data()
 
-# Read location from query params
 query = st.query_params
 lat = query.get("lat")
 lon = query.get("lon")
@@ -23,44 +21,41 @@ lon = query.get("lon")
 if lat and lon:
     try:
         user_location = (float(lat[0]), float(lon[0]))
-
-        # Calculate distances
         data["Distance (mi)"] = data.apply(
             lambda row: geodesic(user_location, (row["Latitude"], row["Longitude"])).miles,
             axis=1
         )
-
         nearest = data.sort_values("Distance (mi)").iloc[0]
-
         st.success(f"Nearest Yard: {nearest['MAINTENANCE YARD']} ({nearest['Distance (mi)']:.1f} mi)")
 
-        # Show map
         m = folium.Map(location=user_location, zoom_start=10)
         folium.Marker(user_location, tooltip="You Are Here", icon=folium.Icon(color='blue')).add_to(m)
         folium.Marker([
             nearest["Latitude"], nearest["Longitude"]
         ], tooltip=nearest["MAINTENANCE YARD"], icon=folium.Icon(color='red')).add_to(m)
         st_folium(m, width=700, height=500)
-    except Exception as e:
-        st.error("Invalid location provided in URL.")
+    except:
+        st.error("Invalid coordinates provided.")
 else:
-    st.warning("Requesting your location... please allow access in your browser.")
+    st.warning("Click the button to get your location and open the GPS-enabled app link.")
 
-    if st.button("📍 Use My Location"):
-        st.components.v1.html("""
-        <script>
-          navigator.geolocation.getCurrentPosition(
-            function(pos) {
-              const lat = pos.coords.latitude;
-              const lon = pos.coords.longitude;
-              const url = new URL(window.location.href);
-              url.searchParams.set("lat", lat);
-              url.searchParams.set("lon", lon);
-              window.open(url.toString(), "_blank");  // ✅ Open GPS-enabled page in new tab
-            },
-            function(err) {
-              alert("Error fetching location: " + err.message);
-            }
-          );
-        </script>
-        """, height=0)
+    st.components.v1.html("""
+    <script>
+      function openWithLocation() {
+        navigator.geolocation.getCurrentPosition(
+          function(pos) {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const base = window.location.origin + window.location.pathname;
+            const url = `${base}?lat=${lat}&lon=${lon}`;
+            document.getElementById("link-out").innerHTML = `<a href="${url}" target="_blank">Open App with My Location</a>`;
+          },
+          function(err) {
+            alert("Failed to get location: " + err.message);
+          }
+        );
+      }
+    </script>
+    <button onclick="openWithLocation()">📍 Use My Location</button>
+    <p id="link-out"></p>
+    """, height=100)
