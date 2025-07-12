@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Getting your location...</title>
-    <script>
-      window.onload = function () {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            function (position) {
-              const lat = position.coords.latitude;
-              const lon = position.coords.longitude;
-              const targetUrl = `https://fuel-locator-app-ykfxqnemvduapp8ybqyertm.streamlit.app/?lat=${lat}&lon=${lon}`;
-              window.location.href = targetUrl;
-            },
-            function (error) {
-              document.body.innerText = "Location access denied.";
-            }
-          );
-        } else {
-          document.body.innerText = "Geolocation not supported.";
-        }
-      };
-    </script>
-  </head>
-  <body>
-    <p>📍 Getting your location and redirecting...</p>
-  </body>
+<head>
+  <title>Getting your location...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    window.onload = function () {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const targetUrl = `https://fuel-locator-app-ykfxqnemvduapp8ybqyertm.streamlit.app/?lat=${lat}&lon=${lon}`;
+            window.location.href = targetUrl;
+          },
+          function (error) {
+            document.body.innerText = "❌ Location access denied or unavailable.";
+          }
+        );
+      } else {
+        document.body.innerText = "❌ Geolocation is not supported.";
+      }
+    };
+  </script>
+</head>
+<body>
+  <h2>📍 Getting your location...</h2>
+  <p>Please wait while we redirect you.</p>
+</body>
 </html>
+
+Fix redirect: update get-location.html to redirect on GPS success
