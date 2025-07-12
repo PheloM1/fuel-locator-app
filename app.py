@@ -69,8 +69,9 @@ else:
                 navigator.geolocation.getCurrentPosition(function(pos) {
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    const newUrl = window.location.href.split('?')[0] + `?lat=${lat}&lon=${lon}`;
-                    window.location.replace(newUrl);
+                    const base = window.location.href.split('?')[0];
+                    const newUrl = base + `?lat=${lat}&lon=${lon}`;
+                    window.open(newUrl, '_blank');
                 }, function(error) {
                     alert("Unable to retrieve your location. Please enable location access.");
                 });
