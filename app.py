@@ -8,7 +8,11 @@ from geopy.distance import geodesic
 # Load geocoded data
 df = pd.read_csv("geocoded_yards.csv")
 
-df = df.dropna(subset=["lat", "lon"])
+# Ensure correct column names and drop rows with missing coordinates
+df = df.dropna(subset=["Latitude", "Longitude"])
+
+# Rename for consistent reference in code
+df = df.rename(columns={"Latitude": "LAT", "Longitude": "LON"})
 
 def find_nearest(lat, lon):
     distances = df.apply(lambda row: geodesic((lat, lon), (row['LAT'], row['LON'])).miles, axis=1)
@@ -44,7 +48,7 @@ if lat is not None and lon is not None:
     address = nearest_yard['MAILING ADDRESS']
     zip_code = str(nearest_yard['ZIP CODE'])
     county = nearest_yard['COUNTY']
-    phone = nearest_yard['YARD PHONE #'] if 'YARD PHONE #' in nearest_yard else "N/A"
+    phone = nearest_yard.get('YARD PHONE #', "N/A")
 
     st.success(f"✅ Nearest Yard: {yard_name} ({distance:.2f} mi)")
     st.markdown(f"**Address:** {address}, {county}, NJ {zip_code}")
