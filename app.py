@@ -28,10 +28,10 @@ st.header("📍 Enter a location or use your GPS")
 location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 
 lat, lon = None, None
-query_params = st.query_params
+query_params = st.experimental_get_query_params()  # ✅ FIXED HERE
 if "lat" in query_params and "lon" in query_params:
-    lat = float(query_params["lat"])
-    lon = float(query_params["lon"])
+    lat = float(query_params["lat"][0])
+    lon = float(query_params["lon"][0])
 elif location_input:
     lat, lon = get_coordinates(location_input)
 
