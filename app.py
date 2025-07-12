@@ -3,59 +3,78 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 from geopy.distance import geodesic
+import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Fuel Locator", layout="wide")
+# Load yard data
+df = pd.read_csv("geocoded_yards.csv")
+df = df.dropna(subset=["Latitude", "Longitude"])
+
+# Set page title
+st.set_page_config(page_title="NJ Fuel Yard Locator", page_icon="🚛", layout="wide")
 st.title("🚛 NJ Fuel Yard Locator")
 
-@st.cache_data
-def load_data():
-    df = pd.read_csv("geocoded_yards.csv")
-    return df.dropna(subset=["Latitude", "Longitude"])
+# Read query params
+query_params = st.query_params
+user_lat = query_params.get("lat", None)
+user_lon = query_params.get("lon", None)
 
-data = load_data()
+# Try converting lat/lon to float
+try:
+    if isinstance(user_lat, list):
+        user_lat = float(user_lat[0])
+    else:
+        user_lat = float(user_lat)
+    if isinstance(user_lon, list):
+        user_lon = float(user_lon[0])
+    else:
+        user_lon = float(user_lon)
 
-query = st.query_params
-lat = query.get("lat")
-lon = query.get("lon")
+    user_location = (user_lat, user_lon)
+    df["Distance (mi)"] = df.apply(
+        lambda row: geodesic(user_location, (row["Latitude"], row["Longitude"])).miles,
+        axis=1
+    )
 
-if lat and lon:
-    try:
-        user_location = (float(lat[0]), float(lon[0]))
-        data["Distance (mi)"] = data.apply(
-            lambda row: geodesic(user_location, (row["Latitude"], row["Longitude"])).miles,
-            axis=1
-        )
-        nearest = data.sort_values("Distance (mi)").iloc[0]
-        st.success(f"Nearest Yard: {nearest['MAINTENANCE YARD']} ({nearest['Distance (mi)']:.1f} mi)")
+    nearest = df.nsmallest(1, "Distance (mi)").iloc[0]
 
-        m = folium.Map(location=user_location, zoom_start=10)
-        folium.Marker(user_location, tooltip="You Are Here", icon=folium.Icon(color='blue')).add_to(m)
-        folium.Marker([
-            nearest["Latitude"], nearest["Longitude"]
-        ], tooltip=nearest["MAINTENANCE YARD"], icon=folium.Icon(color='red')).add_to(m)
-        st_folium(m, width=700, height=500)
-    except:
-        st.error("Invalid coordinates provided.")
-else:
-    st.warning("Click the button to get your location and open the GPS-enabled app link.")
+    # Map setup
+    m = folium.Map(location=user_location, zoom_start=10)
+    folium.Marker(user_location, tooltip="📍You are here", icon=folium.Icon(color="blue")).add_to(m)
+    folium.Marker([nearest["Latitude"], nearest["Longitude"]],
+                  tooltip=f"🚚 Nearest Yard: {nearest['MAINTENANCE YARD']}\n📞 {nearest['YARD PHONE #']}",
+                  icon=folium.Icon(color="green")).add_to(m)
 
-    st.components.v1.html("""
+    st.subheader(f"✅ Nearest Yard: {nearest['MAINTENANCE YARD']} ({nearest['Distance (mi)']:.2f} mi)")
+    st.write(f"📍 Address: {nearest['MAILING ADDRESS']}, {nearest['MUNICIPALITY']}, NJ {int(nearest['ZIP CODE'])}")
+    st.write(f"📞 Phone: {nearest['YARD PHONE #']}")
+
+    st_folium(m, height=500, use_container_width=True)
+
+except Exception:
+    # If no coordinates yet, prompt for location
+    st.warning("Requesting your location... please allow access in your browser.")
+
+    # Inject JS that gets location and shows a clickable link to the correct URL
+    components.html(f"""
     <script>
-      function openWithLocation() {
-        navigator.geolocation.getCurrentPosition(
-          function(pos) {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            const base = window.location.origin + window.location.pathname;
-            const url = `${base}?lat=${lat}&lon=${lon}`;
-            document.getElementById("link-out").innerHTML = `<a href="${url}" target="_blank">Open App with My Location</a>`;
-          },
-          function(err) {
-            alert("Failed to get location: " + err.message);
-          }
-        );
-      }
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {{
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const url = "https://fuel-locator-app-ykfxqnemvduapp8ybqyertm.streamlit.app/?lat=" + lat + "&lon=" + lon;
+        const link = document.createElement("a");
+        link.href = url;
+        link.innerText = "👉 Click here to open with your GPS location";
+        link.target = "_blank";
+        link.style.fontSize = "20px";
+        link.style.fontWeight = "bold";
+        link.style.display = "block";
+        link.style.marginTop = "20px";
+        document.body.appendChild(link);
+      }},
+      function(err) {{
+        document.body.innerText = "Could not access your location. Please enable it.";
+      }}
+    );
     </script>
-    <button onclick="openWithLocation()">📍 Use My Location</button>
-    <p id="link-out"></p>
     """, height=100)
