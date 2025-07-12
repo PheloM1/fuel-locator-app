@@ -7,14 +7,10 @@ from geopy.distance import geodesic
 
 # Load geocoded data
 df = pd.read_csv("geocoded_yards.csv")
-
-# Rename columns to standard format
-df.columns = [col.strip().upper() for col in df.columns]
-df = df.rename(columns={"LATITUDE": "LAT", "LONGITUDE": "LON"})
-df = df.dropna(subset=["LAT", "LON"])
+df = df.dropna(subset=["Latitude", "Longitude"])
 
 def find_nearest(lat, lon):
-    distances = df.apply(lambda row: geodesic((lat, lon), (row['LAT'], row['LON'])).miles, axis=1)
+    distances = df.apply(lambda row: geodesic((lat, lon), (row['Latitude'], row['Longitude'])).miles, axis=1)
     idx = distances.idxmin()
     return df.loc[idx], distances[idx]
 
@@ -27,11 +23,12 @@ def get_coordinates(location_name):
 
 st.set_page_config(page_title="Fuel Yard Locator", layout="wide")
 st.title("🚛 NJ Fuel Yard Locator")
-st.header("📍 Enter a location or use your GPS")
 
+st.header("📍 Enter a location or use your GPS")
 location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 
 lat, lon = None, None
+
 query_params = st.query_params
 if "lat" in query_params and "lon" in query_params:
     lat = float(query_params["lat"])
@@ -57,35 +54,42 @@ if lat is not None and lon is not None:
 
     m = folium.Map(location=[lat, lon], zoom_start=10)
     folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color='blue')).add_to(m)
-    folium.Marker([nearest_yard['LAT'], nearest_yard['LON']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
+    folium.Marker([nearest_yard['Latitude'], nearest_yard['Longitude']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
     st_folium(m, width=700, height=500)
+
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
+
     st.markdown("""
-        <a href="#" onclick="
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
+        <script>
+        function getLocationAndRedirect() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    const url = window.location.origin + window.location.pathname + `?lat=${lat}&lon=${lon}`;
-                    window.open(url, '_blank');
-                },
-                function(error) {
-                    alert('Could not retrieve location. Please allow GPS access.');
-                }
-            );
-            return false;
-        " style="
-            display: inline-block;
-            padding: 0.75em 1.5em;
+                    const redirectUrl = `${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}`;
+                    const win = window.open(redirectUrl, '_blank');
+                    if (!win) {
+                        alert("Please allow pop-ups for this site to use GPS.");
+                    }
+                }, function(error) {
+                    alert("Location access denied. Please allow GPS access to use this feature.");
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+        </script>
+
+        <button onclick="getLocationAndRedirect()" style="
             margin-top: 1em;
+            padding: 0.75em 1.5em;
             font-size: 16px;
-            font-weight: 600;
+            background-color: #444;
             color: white;
-            background-color: #4A4A4A;
-            border-radius: 5px;
-            text-decoration: none;
-        ">
-        📍 Use My Location
-        </a>
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;">
+            📍 Use My Location
+        </button>
     """, unsafe_allow_html=True)
