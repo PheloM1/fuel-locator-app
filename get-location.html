@@ -4,19 +4,16 @@
   <title>Getting your location...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script>
-    window.onload = function () {
+    window.onload = function() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          function (pos) {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            const redirect = `https://fuel-locator-app-ykfxqnemvduapp8ybqyertm.streamlit.app/?lat=${lat}&lon=${lon}`;
-            window.location.href = redirect;
-          },
-          function (error) {
-            document.body.innerHTML = "<h3>❌ Location access denied or unavailable.</h3>";
-          }
-        );
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const redirect = "https://fuel-locator-app-ykfxqnemvduapp8ybqyertm.streamlit.app/?lat=" + lat + "&lon=" + lon;
+          window.location.href = redirect;
+        }, function(error) {
+          document.body.innerHTML = "<h3>❌ Location access denied or unavailable.</h3>";
+        });
       } else {
         document.body.innerHTML = "<h3>❌ Geolocation is not supported on this device.</h3>";
       }
