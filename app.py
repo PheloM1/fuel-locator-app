@@ -2,119 +2,74 @@ import streamlit as st
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
-from geopy.distance import geodesic
 from geopy.geocoders import Nominatim
-import streamlit.components.v1 as components
+from geopy.distance import geodesic
 
-# Custom CSS for mobile optimization
-st.markdown("""
-    <style>
-        html, body, [class*="css"]  {
-            font-size: 18px;
-        }
-        a, button, .stButton>button {
-            font-size: 18px !important;
-            padding: 0.75em 1.5em;
-        }
-        .element-container:has(.folium-map) {
-            overflow-x: hidden !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# Load yard data
+# Load geocoded data
 df = pd.read_csv("geocoded_yards.csv")
-df = df.dropna(subset=["Latitude", "Longitude"])
 
-# Set page title
-st.set_page_config(page_title="NJ Fuel Yard Locator", page_icon="🚛", layout="wide")
+df = df.dropna(subset=["LAT", "LON"])
+
+def find_nearest(lat, lon):
+    distances = df.apply(lambda row: geodesic((lat, lon), (row['LAT'], row['LON'])).miles, axis=1)
+    idx = distances.idxmin()
+    return df.loc[idx], distances[idx]
+
+def get_coordinates(location_name):
+    geolocator = Nominatim(user_agent="fuel_locator")
+    location = geolocator.geocode(location_name)
+    if location:
+        return location.latitude, location.longitude
+    return None, None
+
+st.set_page_config(page_title="Fuel Yard Locator", layout="wide")
 st.title("🚛 NJ Fuel Yard Locator")
 
-# Location input section
-st.subheader("📍 Enter a location or use your GPS")
-address = st.text_input("Type your location (e.g., city or ZIP code):")
+st.header("📍 Enter a location or use your GPS")
+location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 
-if address:
-    try:
-        geolocator = Nominatim(user_agent="fuel-locator-app")
-        location = geolocator.geocode(address)
-        if location:
-            user_lat = location.latitude
-            user_lon = location.longitude
-        else:
-            st.error("Location not found. Try something else.")
-            st.stop()
-    except:
-        st.error("Geocoding failed. Try again later.")
-        st.stop()
+lat, lon = None, None
+
+query_params = st.query_params
+if "lat" in query_params and "lon" in query_params:
+    lat = float(query_params["lat"])
+    lon = float(query_params["lon"])
+elif location_input:
+    lat, lon = get_coordinates(location_input)
+
+if lat is not None and lon is not None:
+    nearest_yard, distance = find_nearest(lat, lon)
+
+    yard_name = nearest_yard['MAINTENANCE YARD']
+    address = nearest_yard['MAILING ADDRESS']
+    zip_code = str(nearest_yard['ZIP CODE'])
+    county = nearest_yard['COUNTY']
+    phone = nearest_yard['YARD PHONE #'] if 'YARD PHONE #' in nearest_yard else "N/A"
+
+    st.success(f"✅ Nearest Yard: {yard_name} ({distance:.2f} mi)")
+    st.markdown(f"**Address:** {address}, {county}, NJ {zip_code}")
+    st.markdown(f"**Phone:** {phone}")
+
+    maps_url = f"https://www.google.com/maps/dir/?api=1&destination={address.replace(' ', '+')}+{county}+NJ+{zip_code}"
+    st.markdown(f"[🗺️ Open in Google Maps]({maps_url})", unsafe_allow_html=True)
+
+    m = folium.Map(location=[lat, lon], zoom_start=10)
+    folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color='blue')).add_to(m)
+    folium.Marker([nearest_yard['LAT'], nearest_yard['LON']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
+    st_folium(m, width=700, height=500)
 else:
-    query_params = st.query_params
-    user_lat = query_params.get("lat", None)
-    user_lon = query_params.get("lon", None)
-
-# Try converting lat/lon to float
-try:
-    if isinstance(user_lat, list):
-        user_lat = float(user_lat[0])
-    else:
-        user_lat = float(user_lat)
-    if isinstance(user_lon, list):
-        user_lon = float(user_lon[0])
-    else:
-        user_lon = float(user_lon)
-
-    user_location = (user_lat, user_lon)
-    df["Distance (mi)"] = df.apply(
-        lambda row: geodesic(user_location, (row["Latitude"], row["Longitude"])).miles,
-        axis=1
-    )
-
-    nearest = df.nsmallest(1, "Distance (mi)").iloc[0]
-
-    # Map setup
-    m = folium.Map(location=user_location, zoom_start=10)
-    folium.Marker(user_location, tooltip="📍You are here", icon=folium.Icon(color="blue")).add_to(m)
-    folium.Marker([
-        nearest["Latitude"], nearest["Longitude"]
-    ], tooltip=f"🚚 {nearest['MAINTENANCE YARD']}", icon=folium.Icon(color="green")).add_to(m)
-
-    st.subheader(f"✅ Nearest Yard: {nearest['MAINTENANCE YARD']} ({nearest['Distance (mi)']:.2f} mi)")
-    st.write(f"📍 Address: {nearest['MAILING ADDRESS']}, {nearest['MUNICIPALITY']}, NJ {int(nearest['ZIP CODE'])}")
-    st.write(f"📞 Phone: {nearest['YARD PHONE #']}")
-
-    # Google Maps directions link
-    dest_lat = nearest['Latitude']
-    dest_lon = nearest['Longitude']
-    maps_url = f"https://www.google.com/maps/dir/?api=1&origin=My+Location&destination={dest_lat},{dest_lon}&travelmode=driving"
-    st.markdown(f"[🗺️ Open in Google Maps for Directions]({maps_url})", unsafe_allow_html=True)
-
-    st_folium(m, height=400, use_container_width=True)
-
-except Exception:
     st.warning("Requesting your location... please allow access in your browser.")
-
-    # Inject JS to scroll up and build a clickable link
-    components.html(f"""
-    <script>
-    window.scrollTo(0, 0);
-    navigator.geolocation.getCurrentPosition(
-      function(pos) {{
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        const url = "https://fuel-locator-app-ykfxqnemvduapp8ybqyertm.streamlit.app/?lat=" + lat + "&lon=" + lon;
-        const link = document.createElement("a");
-        link.href = url;
-        link.innerText = "👉 Click here to open with your GPS location";
-        link.target = "_blank";
-        link.style.fontSize = "20px";
-        link.style.fontWeight = "bold";
-        link.style.display = "block";
-        link.style.marginTop = "20px";
-        document.body.appendChild(link);
-      }},
-      function(err) {{
-        document.body.innerText = "Could not access your location. Please enable it.";
-      }}
-    );
-    </script>
-    """, height=100)
+    st.components.v1.html("""
+        <script>
+        window.addEventListener('load', () => {
+            if (!window.location.search.includes("lat")) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const newUrl = window.location.href.split('?')[0] + `?lat=${lat}&lon=${lon}`;
+                    window.location.replace(newUrl);
+                });
+            }
+        });
+        </script>
+    """, height=0)
