@@ -62,7 +62,6 @@ if lat is not None and lon is not None:
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
 
-    # Pure JS workaround to avoid React error #231
     st.components.v1.html("""
         <script>
         function openGPSWindow() {
@@ -76,15 +75,16 @@ else:
             });
         }
         </script>
-        <div style="margin-top: 1em;">
-            <button onclick="openGPSWindow()" style="
-                padding: 0.75em 1.5em;
-                font-size: 16px;
-                background-color: #4A4A4A;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-            ">📍 Use My Location</button>
-        </div>
-    """, height=80)
+
+        <a href="javascript:openGPSWindow()" style="
+            display: inline-block;
+            margin-top: 1em;
+            padding: 0.75em 1.5em;
+            font-size: 16px;
+            background-color: #4A4A4A;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+        ">📍 Use My Location</a>
+    """, height=100)
