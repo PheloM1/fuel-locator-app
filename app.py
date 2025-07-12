@@ -23,7 +23,7 @@ lon = query.get("lon")
 
 if lat and lon:
     try:
-        user_location = (float(lat), float(lon))
+        user_location = (float(lat[0]), float(lon[0]))  # ✅ FIXED: access first element
 
         # Calculate distances
         data["Distance (mi)"] = data.apply(
