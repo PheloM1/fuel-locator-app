@@ -34,7 +34,7 @@ st.markdown("""
     <p style="margin-top: 0.2rem; font-size: 1rem; color: gray;">Find your nearest maintenance fuel station across NJ</p>
 """, unsafe_allow_html=True)
 
-st.header("\ud83d\udccd Enter a location or use your GPS")
+st.header("📍 Enter a location or use your GPS")
 location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 lat, lon = None, None
 query_params = st.query_params
