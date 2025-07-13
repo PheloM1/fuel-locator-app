@@ -3,7 +3,15 @@
 <head>
   <title>Getting your location...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
   <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log("Service Worker registered"));
+    }
+
+    // GPS location
     window.onload = function() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(pos) {
