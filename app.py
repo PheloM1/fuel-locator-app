@@ -80,18 +80,19 @@ if lat is not None and lon is not None:
 
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
-    st.markdown("""
-        <div style="margin-top: 1em;">
-            <a href="https://phelom1.github.io/fuel-locator-app/get-location.html" target="_blank">
-                <button style="
-                    padding: 0.75em 1.5em;
-                    font-size: 16px;
-                    background-color: #28a745;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    cursor: pointer;
-                ">\ud83d\udccd Use My Location</button>
-            </a>
-        </div>
-    """, unsafe_allow_html=True)
+    st.components.v1.html("""
+    <div style="margin-top: 1em; text-align: center;">
+        <a href="https://phelom1.github.io/fuel-locator-app/get-location.html" target="_blank" rel="noopener noreferrer">
+            <button style="
+                padding: 0.75em 1.5em;
+                font-size: 16px;
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+            ">📍 Use My Location</button>
+        </a>
+    </div>
+""", height=60)
+
