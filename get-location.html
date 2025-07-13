@@ -3,23 +3,15 @@
 <head>
   <title>Getting your location...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="manifest" href="manifest.json">
   <script>
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log("Service Worker registered"));
-    }
-
-    // GPS location
-    window.onload = function() {
+    window.onload = function () {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(pos) {
+        navigator.geolocation.getCurrentPosition(function (pos) {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
           const redirect = "https://fuel-locator-app-ykfxqnemvduapp8ybqyertm.streamlit.app/?lat=" + lat + "&lon=" + lon;
           window.location.href = redirect;
-        }, function(error) {
+        }, function (error) {
           document.body.innerHTML = "<h3>❌ Location access denied or unavailable.</h3>";
         });
       } else {
