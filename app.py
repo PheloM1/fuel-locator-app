@@ -26,8 +26,31 @@ def get_coordinates(location_name):
 
 # Page setup
 st.set_page_config(page_title="Fuel Yard Locator", layout="wide")
-st.title("🚛 NJ Fuel Yard Locator")
-st.header("📍 Enter a location or use your GPS")
+
+# Add CSS styling
+st.markdown("""
+    <style>
+    .main {
+        padding-top: 1rem;
+        padding-bottom: 2rem;
+        font-family: 'Segoe UI', sans-serif;
+    }
+    button {
+        cursor: pointer;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Header
+col1, col2 = st.columns([1, 8])
+with col1:
+    st.image("assets/fuel_icons.png", width=60)
+with col2:
+    st.markdown("## **NJ Fuel Yard Locator**")
+    st.caption("Find your nearest maintenance fuel station across NJ")
+
+st.divider()
+st.subheader("📍 Enter a location or use your GPS")
 
 location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 lat, lon = None, None
@@ -47,22 +70,30 @@ if lat is not None and lon is not None:
     county = nearest_yard['COUNTY']
     phone = nearest_yard.get('YARD PHONE #', 'N/A')
 
-    st.success(f"✅ Nearest Yard: {yard_name} ({distance:.2f} mi)")
-    st.markdown(f"**Address:** {address}, {county}, NJ {zip_code}")
-    st.markdown(f"**Phone:** {phone}")
+    st.success(f"**✅ Nearest Yard:** {yard_name}  \n📍 {address}, {county}, NJ {zip_code}  \n📞 {phone}")
 
     maps_url = f"https://www.google.com/maps/dir/?api=1&destination={address.replace(' ', '+')}+{county}+NJ+{zip_code}"
-    st.markdown(f"[🗺️ Open in Google Maps]({maps_url})", unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <a href="{maps_url}" target="_blank">
+            <button style="
+                margin-top: 0.5em;
+                padding: 0.5em 1em;
+                background-color: #0d6efd;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+            ">🗺️ Open in Google Maps</button>
+        </a>
+        """, unsafe_allow_html=True
+    )
 
     # Map
     m = folium.Map(location=[lat, lon], zoom_start=10)
 
     folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color='blue')).add_to(m)
-    folium.Marker(
-        [nearest_yard['Latitude'], nearest_yard['Longitude']],
-        popup=yard_name,
-        icon=folium.Icon(color='green')
-    ).add_to(m)
+    folium.Marker([nearest_yard['Latitude'], nearest_yard['Longitude']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
 
     if st.checkbox("📍 Show all yards on map"):
         for _, row in df.iterrows():
@@ -78,29 +109,28 @@ if lat is not None and lon is not None:
             {county}, NJ {zip_code}<br>
             <a href="{maps_url}" target="_blank">🗺️ Open in Google Maps</a>
             """
-
             folium.Marker(
                 [row['Latitude'], row['Longitude']],
                 popup=folium.Popup(popup_html, max_width=300),
                 icon=folium.Icon(color='gray')
             ).add_to(m)
 
-    st_folium(m, width=700, height=500)
+    st_folium(m, width="100%", height=500)
 
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
 
     st.markdown("""
-        <a href="https://phelom1.github.io/fuel-locator-app/get-location.html" target="_blank">
-            <button style="
-                margin-top: 1em;
-                padding: 0.75em 1.5em;
-                font-size: 16px;
-                background-color: #4A4A4A;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-            ">📍 Use My Location</button>
-        </a>
+        <div style="text-align:center; margin-top: 1em;">
+            <a href="https://phelom1.github.io/fuel-locator-app/get-location.html" target="_blank">
+                <button style="
+                    padding: 0.75em 1.5em;
+                    font-size: 16px;
+                    background-color: #198754;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                ">📍 Use My Location</button>
+            </a>
+        </div>
     """, unsafe_allow_html=True)
