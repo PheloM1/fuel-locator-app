@@ -12,7 +12,7 @@
           const redirect = "https://fuel-locator-app-ykfxqnemvduapp8ybqyertm.streamlit.app/?lat=" + lat + "&lon=" + lon;
           window.location.href = redirect;
         }, function (error) {
-          document.body.innerHTML = "<h3>❌ Location access denied or unavailable.</h3>";
+          document.body.innerHTML = "<h3>❌ Location access denied or unavailable.</h3><p>Please check your phone settings and try again.</p>";
         });
       } else {
         document.body.innerHTML = "<h3>❌ Geolocation is not supported on this device.</h3>";
@@ -20,8 +20,8 @@
     };
   </script>
 </head>
-<body>
+<body style="font-family: sans-serif; padding: 2em; text-align: center;">
   <h2>📍 Getting your location...</h2>
-  <p>Please wait while we determine your GPS position.</p>
+  <p>Please wait while we determine your GPS position.<br/>This should only take a few seconds.</p>
 </body>
 </html>
