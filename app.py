@@ -21,7 +21,7 @@ def get_coordinates(location_name):
         if location:
             return location.latitude, location.longitude
     except Exception:
-        st.error("❌ Geolocation lookup failed. Please try again later.")
+        st.error("\u274c Geolocation lookup failed. Please try again later.")
     return None, None
 
 # Page setup
@@ -34,7 +34,7 @@ st.markdown("""
     <p style="margin-top: 0.2rem; font-size: 1rem; color: gray;">Find your nearest maintenance fuel station across NJ</p>
 """, unsafe_allow_html=True)
 
-st.header("📍 Enter a location or use your GPS")
+st.header("\ud83d\udccd Enter a location or use your GPS")
 location_input = st.text_input("Type your location (e.g., city or ZIP code):")
 lat, lon = None, None
 query_params = st.query_params
@@ -53,22 +53,23 @@ if lat is not None and lon is not None:
     county = nearest_yard['COUNTY']
     phone = nearest_yard.get('YARD PHONE #', 'N/A')
 
-    st.success(f"✅ Nearest Yard: {yard_name} ({distance:.2f} mi)")
+    st.success(f"\u2705 Nearest Yard: {yard_name} ({distance:.2f} mi)")
     st.markdown(f"**Address:** {address}, {county}, NJ {zip_code}")
     st.markdown(f"**Phone:** {phone}")
+
     maps_url = f"https://www.google.com/maps/dir/?api=1&destination={address.replace(' ', '+')}+{county}+NJ+{zip_code}"
-    st.markdown(f"[🗺️ Open in Google Maps]({maps_url})", unsafe_allow_html=True)
+    st.markdown(f"[\ud83d\uddfa\ufe0f Open in Google Maps]({maps_url})", unsafe_allow_html=True)
 
     m = folium.Map(location=[lat, lon], zoom_start=10)
     folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color='blue')).add_to(m)
     folium.Marker([nearest_yard['Latitude'], nearest_yard['Longitude']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
 
-    if st.checkbox("📍 Show all yards on map"):
+    if st.checkbox("\ud83d\udccd Show all yards on map"):
         for _, row in df.iterrows():
             popup_html = f"""
             <b>{row['MAINTENANCE YARD']}</b><br>
             {row['MAILING ADDRESS']}, {row['COUNTY']}, NJ {row['ZIP CODE']}<br>
-            <a href="https://www.google.com/maps/dir/?api=1&destination={row['MAILING ADDRESS'].replace(' ', '+')}+{row['COUNTY']}+NJ+{row['ZIP CODE']}" target="_blank">📍 Directions</a>
+            <a href='https://www.google.com/maps/dir/?api=1&destination={row['MAILING ADDRESS'].replace(' ', '+')}+{row['COUNTY']}+NJ+{row['ZIP CODE']}' target='_blank'>\ud83d\udccd Directions</a>
             """
             folium.Marker(
                 [row['Latitude'], row['Longitude']],
@@ -79,28 +80,18 @@ if lat is not None and lon is not None:
 
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
-    st.components.v1.html("""
-        <script>
-        function openGPSWindow() {
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                const newUrl = window.location.origin + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
-                window.open(newUrl, '_blank');
-            }, function(err) {
-                alert("❌ Location access denied or unavailable.");
-            });
-        }
-        </script>
+    st.markdown("""
         <div style="margin-top: 1em;">
-            <button onclick="openGPSWindow()" style="
-                padding: 0.75em 1.5em;
-                font-size: 16px;
-                background-color: #198754;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-            ">📍 Use My Location</button>
+            <a href="https://phelom1.github.io/fuel-locator-app/get-location.html" target="_blank">
+                <button style="
+                    padding: 0.75em 1.5em;
+                    font-size: 16px;
+                    background-color: #28a745;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                ">\ud83d\udccd Use My Location</button>
+            </a>
         </div>
-    """, height=80)
+    """, unsafe_allow_html=True)
