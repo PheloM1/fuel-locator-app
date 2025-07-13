@@ -21,7 +21,7 @@ def get_coordinates(location_name):
         if location:
             return location.latitude, location.longitude
     except Exception:
-        st.error("\u274c Geolocation lookup failed. Please try again later.")
+        st.error("❌ Geolocation lookup failed. Please try again later.")
     return None, None
 
 # Page setup
@@ -40,8 +40,12 @@ lat, lon = None, None
 query_params = st.query_params
 
 if "lat" in query_params and "lon" in query_params:
-    lat = float(query_params["lat"])
-    lon = float(query_params["lon"])
+    try:
+        lat = float(query_params["lat"])
+        lon = float(query_params["lon"])
+    except ValueError:
+        st.error("❌ Invalid GPS coordinates in URL.")
+        lat, lon = None, None
 elif location_input:
     lat, lon = get_coordinates(location_input)
 
@@ -53,23 +57,23 @@ if lat is not None and lon is not None:
     county = nearest_yard['COUNTY']
     phone = nearest_yard.get('YARD PHONE #', 'N/A')
 
-    st.success(f"\u2705 Nearest Yard: {yard_name} ({distance:.2f} mi)")
+    st.success(f"✅ Nearest Yard: {yard_name} ({distance:.2f} mi)")
     st.markdown(f"**Address:** {address}, {county}, NJ {zip_code}")
     st.markdown(f"**Phone:** {phone}")
 
     maps_url = f"https://www.google.com/maps/dir/?api=1&destination={address.replace(' ', '+')}+{county}+NJ+{zip_code}"
-    st.markdown(f"[\ud83d\uddfa\ufe0f Open in Google Maps]({maps_url})", unsafe_allow_html=True)
+    st.markdown(f"[🗺️ Open in Google Maps]({maps_url})", unsafe_allow_html=True)
 
     m = folium.Map(location=[lat, lon], zoom_start=10)
     folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color='blue')).add_to(m)
     folium.Marker([nearest_yard['Latitude'], nearest_yard['Longitude']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
 
-    if st.checkbox("\ud83d\udccd Show all yards on map"):
+    if st.checkbox("📍 Show all yards on map"):
         for _, row in df.iterrows():
             popup_html = f"""
             <b>{row['MAINTENANCE YARD']}</b><br>
             {row['MAILING ADDRESS']}, {row['COUNTY']}, NJ {row['ZIP CODE']}<br>
-            <a href='https://www.google.com/maps/dir/?api=1&destination={row['MAILING ADDRESS'].replace(' ', '+')}+{row['COUNTY']}+NJ+{row['ZIP CODE']}' target='_blank'>\ud83d\udccd Directions</a>
+            <a href='https://www.google.com/maps/dir/?api=1&destination={row['MAILING ADDRESS'].replace(' ', '+')}+{row['COUNTY']}+NJ+{row['ZIP CODE']}' target='_blank'>📍 Directions</a>
             """
             folium.Marker(
                 [row['Latitude'], row['Longitude']],
@@ -80,7 +84,7 @@ if lat is not None and lon is not None:
 
 else:
     st.warning("Enter a location above or click the button to use your device’s GPS.")
-    st.components.v1.html("""
+    st.markdown("""
     <div style="margin-top: 1em; text-align: center;">
         <a href="https://phelom1.github.io/fuel-locator-app/get-location.html" target="_blank" rel="noopener noreferrer">
             <button style="
@@ -94,5 +98,4 @@ else:
             ">📍 Use My Location</button>
         </a>
     </div>
-""", height=60)
-
+""", unsafe_allow_html=True)
