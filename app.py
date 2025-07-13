@@ -58,13 +58,30 @@ if lat is not None and lon is not None:
     m = folium.Map(location=[lat, lon], zoom_start=10)
 
     folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color='blue')).add_to(m)
-    folium.Marker([nearest_yard['Latitude'], nearest_yard['Longitude']], popup=yard_name, icon=folium.Icon(color='green')).add_to(m)
+    folium.Marker(
+        [nearest_yard['Latitude'], nearest_yard['Longitude']],
+        popup=yard_name,
+        icon=folium.Icon(color='green')
+    ).add_to(m)
 
     if st.checkbox("📍 Show all yards on map"):
         for _, row in df.iterrows():
+            yard_name = row['MAINTENANCE YARD']
+            address = row['MAILING ADDRESS']
+            county = row['COUNTY']
+            zip_code = str(row['ZIP CODE'])
+
+            maps_url = f"https://www.google.com/maps/dir/?api=1&destination={address.replace(' ', '+')}+{county}+NJ+{zip_code}"
+            popup_html = f"""
+            <b>{yard_name}</b><br>
+            {address}<br>
+            {county}, NJ {zip_code}<br>
+            <a href="{maps_url}" target="_blank">🗺️ Open in Google Maps</a>
+            """
+
             folium.Marker(
                 [row['Latitude'], row['Longitude']],
-                popup=row['MAINTENANCE YARD'],
+                popup=folium.Popup(popup_html, max_width=300),
                 icon=folium.Icon(color='gray')
             ).add_to(m)
 
@@ -87,4 +104,3 @@ else:
             ">📍 Use My Location</button>
         </a>
     """, unsafe_allow_html=True)
-
